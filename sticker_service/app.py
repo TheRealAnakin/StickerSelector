@@ -135,6 +135,7 @@ async def embedding_gate(request: Request, call_next):
                 or path.startswith("/stickers")
                 or path == "/progress"
                 or path == "/init"
+                or path == "/market"
             ):
                 return RedirectResponse("/init", status_code=302)
         if not (
@@ -231,7 +232,7 @@ def _reset_download_state_on_startup() -> None:
         )
     if model_key and status in {"done", "ready"}:
         spec = get_model_spec(model_key)
-        downloaded, _ = _model_download_status(spec)
+        downloaded, _ = _model_download_status_local(spec)
         if not downloaded:
             _set_download_state(
                 status="idle",
@@ -367,35 +368,24 @@ def _update_model_state(new_state: ModelState, persist: bool = True) -> None:
 
 
 def _any_model_downloaded() -> bool:
-    try:
-        for spec in MODEL_SPECS:
-            try:
-                downloaded, _ = _model_download_status(spec)
-                if downloaded:
-                    return True
-            except Exception:
-                continue
-    except Exception:
-        pass
-    try:
-        for item in CFG.MODEL_DIR.glob("models--*"):
-            if (item / "snapshots").exists():
-                return True
-    except Exception:
-        pass
+    for spec in MODEL_SPECS:
+        downloaded, _ = _model_download_status_local(spec)
+        if downloaded:
+            return True
     return False
 
 
 def ensure_models() -> bool:
     global EMBED
     global RERANK
-    if not _any_model_downloaded():
-        logger.info("No downloaded models found, skip loading")
+    state = _current_model_state()
+    spec = get_model_spec(state.model_key)
+    downloaded, _ = _model_download_status_local(spec)
+    if not downloaded:
+        logger.info("Model cache missing for %s, skip loading", spec.key)
         EMBED = None
         RERANK = None
         return False
-    state = _current_model_state()
-    spec = get_model_spec(state.model_key)
 
     if EMBED is None or EMBED.model_name != spec.embed_model or EMBED.precision != spec.precision or EMBED.pooling != spec.pooling:
         logger.info("Loading embed model: %s (%s)", spec.embed_model, spec.precision)
@@ -706,6 +696,49 @@ def _is_valid_cached_file(path: Path, expected_size: int) -> bool:
     return True
 
 
+def _snapshot_has_required_files(snapshot: Path) -> bool:
+    has_config = False
+    has_weight = False
+    try:
+        for item in snapshot.rglob("*"):
+            if not item.is_file():
+                continue
+            name = item.name
+            if name.endswith(".incomplete"):
+                continue
+            if name == "config.json":
+                has_config = True
+            elif (
+                name.endswith(".safetensors")
+                or name in {"pytorch_model.bin", "pytorch_model.bin.index.json", "model.safetensors.index.json"}
+            ):
+                has_weight = True
+            if has_config and has_weight:
+                return True
+    except Exception:
+        return False
+    return False
+
+
+def _repo_cached_local(repo_id: str) -> bool:
+    path = _repo_cache_path(repo_id)
+    snapshots = path / "snapshots"
+    try:
+        if not snapshots.exists():
+            return False
+    except Exception:
+        return False
+    try:
+        for snap in snapshots.iterdir():
+            if not snap.is_dir():
+                continue
+            if _snapshot_has_required_files(snap):
+                return True
+    except Exception:
+        return False
+    return False
+
+
 def _is_repo_downloaded(repo_id: str) -> bool:
     files = _get_repo_files(repo_id)
     if not files:
@@ -724,6 +757,16 @@ def _is_repo_downloaded(repo_id: str) -> bool:
         if not _is_valid_cached_file(Path(path), int(size or 0)):
             return False
     return True
+
+
+def _model_download_status_local(spec) -> tuple[bool, list[str]]:
+    missing: list[str] = []
+    if not _repo_cached_local(spec.embed_model):
+        missing.append(spec.embed_model)
+    if spec.mode == "rerank" and spec.reranker_model:
+        if not _repo_cached_local(spec.reranker_model):
+            missing.append(spec.reranker_model)
+    return (len(missing) == 0), missing
 
 
 def _model_download_status(spec) -> tuple[bool, list[str]]:
@@ -798,9 +841,7 @@ def _start_download_process(model_key: str, recall_topk: int, apply_switch: bool
 def on_startup() -> None:
     _get_hf_endpoint()
     _reset_download_state_on_startup()
-    has_models = _any_model_downloaded()
-    if has_models:
-        ensure_models()
+    has_models = ensure_models()
     with DB_LOCK:
         if not db.list_series(CON):
             db.create_series(CON, "default")
@@ -1204,10 +1245,14 @@ def api_model_status():
     state = _current_model_state()
     spec = get_model_spec(state.model_key)
     device = _device_info()
+    local_only = not _any_model_downloaded()
     models = []
     for s in MODEL_SPECS:
         try:
-            downloaded, missing = _model_download_status(s)
+            if local_only:
+                downloaded, missing = _model_download_status_local(s)
+            else:
+                downloaded, missing = _model_download_status(s)
         except Exception:
             logger.exception("Failed to check model cache: %s", s.key)
             downloaded, missing = False, [s.embed_model]
@@ -1810,6 +1855,18 @@ def page_benchmark(request: Request):
     )
 
 
+@app.get("/market", response_class=HTMLResponse)
+def page_market(request: Request):
+    return templates.TemplateResponse(
+        "market.html",
+        {
+            "request": request,
+            "title": "市场",
+            "__PAGE__": "market",
+        },
+    )
+
+
 @app.get("/init", response_class=HTMLResponse)
 def page_init(request: Request):
     if _any_model_downloaded():
@@ -1818,7 +1875,7 @@ def page_init(request: Request):
         "init.html",
         {
             "request": request,
-            "title": "初始化模型",
+            "title": "模型",
             "__PAGE__": "init",
         },
     )

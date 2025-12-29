@@ -1,0 +1,1 @@
+APP_VERSION: str = "Release-1.1.0"

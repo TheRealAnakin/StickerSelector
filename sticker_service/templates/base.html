@@ -36,7 +36,8 @@
       <a href="/admin/stickers" class="navlink {% if p=='stickers' %}active{% endif %}">表情包管理</a>
       <a href="/admin/series" class="navlink {% if p=='series' %}active{% endif %}">系列管理</a>
       <a href="/lab" class="navlink {% if p=='lab' %}active{% endif %}">Lab</a>
-      <a href="/benchmark" class="navlink {% if p=='benchmark' %}active{% endif %}">模型</a>
+      <a href="/benchmark" class="navlink {% if p=='benchmark' or p=='init' %}active{% endif %}">模型</a>
+      <a href="/market" class="navlink market {% if p=='market' %}active{% endif %}">市场</a>
       <a href="/logs" class="navlink">日志</a>
       <a href="/about" class="navlink {% if p=='about' %}active{% endif %}">关于</a>
     </nav>

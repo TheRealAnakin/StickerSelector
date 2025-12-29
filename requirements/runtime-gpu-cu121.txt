@@ -4,6 +4,7 @@ torch==2.5.1+cu121
 
 fastapi==0.119.1
 uvicorn==0.29.0
+python-multipart==0.0.21
 
 transformers==4.39.3
 tokenizers==0.15.2
@@ -11,5 +12,5 @@ safetensors==0.4.5
 huggingface-hub==0.23.5
 
 numpy==1.26.4
-python-multipart==0.0.21
 psutil
+

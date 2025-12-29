@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>市场</h1>
+    <div class="hint">发现并安装社区贴纸包</div>
+  </div>
+  <div class="row-line">
+    <button id="btnRefreshMarket" class="btn secondary small">刷新列表</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="row">
+    <div class="title2">社区贴纸包</div>
+    <div id="marketNotice" class="hint">加载中...</div>
+    <div id="marketMeta" class="muted small"></div>
+    <div id="marketList" class="market-grid"></div>
+  </div>
+</div>
+{% endblock %}

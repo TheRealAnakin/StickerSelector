@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
+from sticker_service.version import APP_VERSION as v
 
 
 @dataclass(frozen=True)
@@ -9,7 +10,7 @@ class AppConfig:
     M3E_MODEL: str = "moka-ai/m3e-small"
 
     # App
-    APP_VERSION: str = "Release-1.0.0"
+    APP_VERSION: str = v
 
     # Runtime dirs
     ROOT: Path = Path(__file__).resolve().parent

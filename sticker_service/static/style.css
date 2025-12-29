@@ -217,6 +217,54 @@ h1 {
   font-weight: 600;
 }
 
+.navlink.market {
+  color: #ffffff;
+  border: none; /* 去除描边 */
+  padding: 10px;
+  background: linear-gradient(45deg, #7b66ff, #c281ff, #ffa9a9, #f183ba);
+  background-size: 200% 200%; /* 为动画效果准备 */
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(123, 102, 255, 0.2);
+  overflow: hidden; /* 为伪元素溢出做准备 */
+  z-index: 1;
+}
+
+/* 添加伪元素实现更平滑的渐变过渡 */
+.navlink.market::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #7b66ff, #c281ff, #ffa9a9, #f183ba);
+  background-size: 200% 200%;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+}
+
+.navlink.market:hover {
+  color: #ffffff;
+  border: none;
+
+  filter: brightness(1.05);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(123, 102, 255, 0.4);
+}
+
+.navlink.market:hover::before {
+  opacity: 1;
+}
+
+/* 点击效果 */
+.navlink.market:active {
+  transform: translateY(0);
+  transition-duration: 0.1s;
+  filter: brightness(0.98);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
@@ -915,6 +963,107 @@ select:focus {
 
 .input-compact {
   width: 120px;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.market-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: var(--panel-strong);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+  animation: fadeUp 0.45s ease both;
+}
+
+.market-cover {
+  width: 100%;
+  height: 160px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(15, 23, 42, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  text-align: center;
+}
+
+.market-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.market-cover.fallback {
+  color: var(--muted);
+  font-weight: 600;
+  padding: 0 10px;
+}
+
+.market-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.market-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.market-desc {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.market-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.market-tag {
+  background: rgba(29, 78, 216, 0.12);
+  border: 1px solid rgba(29, 78, 216, 0.2);
+  color: #1d4ed8;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.market-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.market-progress {
+  display: none;
+  margin-top: 6px;
+}
+
+.market-progress.active {
+  display: block;
+}
+
+.market-status {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .modal-host {

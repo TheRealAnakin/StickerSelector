@@ -803,6 +803,277 @@ function onBenchmarkPage() {
   refreshStatus();
 }
 
+// =============== MARKET PAGE ===============
+function onMarketPage() {
+  const marketList = qs("#marketList");
+  const marketNotice = qs("#marketNotice");
+  const marketMeta = qs("#marketMeta");
+  const btnRefresh = qs("#btnRefreshMarket");
+  if (!marketList) return;
+
+  const marketUrl = "https://thed0ublec.github.io/Sticker-Market/market.json";
+  const baseUrl = new URL("./", marketUrl).href;
+
+  function setNotice(text, ok) {
+    if (!marketNotice) return;
+    marketNotice.textContent = text || "";
+    marketNotice.style.color = ok === false ? "#b91c1c" : "";
+  }
+
+  function setMeta(text) {
+    if (!marketMeta) return;
+    marketMeta.textContent = text || "";
+  }
+
+  function normalizeUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    if (raw.toLowerCase() === "none") return "";
+    try {
+      return new URL(raw, baseUrl).href;
+    } catch (e) {
+      return raw;
+    }
+  }
+
+  function downloadWithProgress(url, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("GET", url, true);
+      xhr.responseType = "blob";
+      xhr.onprogress = (evt) => {
+        if (typeof onProgress === "function") {
+          const total = evt.lengthComputable ? evt.total : 0;
+          onProgress(evt.loaded || 0, total || 0);
+        }
+      };
+      xhr.onerror = () => reject(new Error("network error"));
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+          resolve(xhr.response);
+        } else {
+          reject(new Error(`download failed (${xhr.status})`));
+        }
+      };
+      xhr.send();
+    });
+  }
+
+  async function importZipBlob(blob, filename, mode) {
+    const fd = new FormData();
+    const safeName = filename || "pack.zip";
+    const file = new File([blob], safeName, { type: "application/zip" });
+    fd.append("file", file, safeName);
+    fd.append("mode", mode || "ask");
+
+    const res = await fetch("/admin/series/import", { method: "POST", body: fd });
+    let data = {};
+    try { data = await res.json(); } catch (e) { }
+    return { res, data };
+  }
+
+  async function importZipWithMerge(blob, filename) {
+    let mode = "ask";
+    while (true) {
+      const { res, data } = await importZipBlob(blob, filename, mode);
+      if (res.status === 409 && data && data.conflict) {
+        const name = data.series_name || "";
+        let ok = false;
+        const body = `系列 "${name}" 已存在，是否合并导入？`;
+        if (typeof modalConfirm === "function") {
+          ok = await modalConfirm({
+            title: "系列已存在",
+            body,
+            okText: "合并导入",
+            cancelText: "取消",
+          });
+        } else {
+          ok = confirm(body);
+        }
+        if (ok) {
+          mode = "merge";
+          continue;
+        }
+        throw new Error("已取消导入");
+      }
+      if (!res.ok || !data.ok) {
+        throw new Error(data.detail || data.message || res.status);
+      }
+      return data;
+    }
+  }
+
+  function renderPack(pack) {
+    const archive = pack.archive || {};
+    const coverValue = archive.Cover || archive.cover || "";
+    const coverUrl = normalizeUrl(coverValue);
+    const zipUrl = normalizeUrl(archive.url || "");
+
+    const title = String(pack.name || pack.id || "未命名");
+    const author = String(pack.author || "");
+    const version = String(pack.version || "");
+    const desc = String(pack.description || "");
+    const tags = Array.isArray(pack.tags) ? pack.tags : [];
+
+    const card = document.createElement("div");
+    card.className = "market-card";
+
+    const cover = document.createElement("div");
+    cover.className = "market-cover";
+    if (coverUrl) {
+      const img = document.createElement("img");
+      img.src = coverUrl;
+      img.alt = title;
+      cover.appendChild(img);
+    } else {
+      cover.classList.add("fallback");
+      cover.textContent = title;
+    }
+    card.appendChild(cover);
+
+    const titleEl = document.createElement("div");
+    titleEl.className = "market-title";
+    titleEl.textContent = title;
+    card.appendChild(titleEl);
+
+    const metaEl = document.createElement("div");
+    metaEl.className = "market-meta";
+    if (author) {
+      const el = document.createElement("span");
+      el.textContent = `作者 ${author}`;
+      metaEl.appendChild(el);
+    }
+    if (version) {
+      const el = document.createElement("span");
+      el.textContent = `版本 ${version}`;
+      metaEl.appendChild(el);
+    }
+    if (pack.id) {
+      const el = document.createElement("span");
+      el.textContent = `ID ${pack.id}`;
+      metaEl.appendChild(el);
+    }
+    if (metaEl.childNodes.length) card.appendChild(metaEl);
+
+    if (desc) {
+      const descEl = document.createElement("div");
+      descEl.className = "market-desc";
+      descEl.textContent = desc;
+      card.appendChild(descEl);
+    }
+
+    if (tags.length) {
+      const tagsEl = document.createElement("div");
+      tagsEl.className = "market-tags";
+      tags.slice(0, 12).forEach((t) => {
+        const tag = document.createElement("span");
+        tag.className = "market-tag";
+        tag.textContent = String(t);
+        tagsEl.appendChild(tag);
+      });
+      card.appendChild(tagsEl);
+    }
+
+    const actions = document.createElement("div");
+    actions.className = "market-actions";
+
+    const btnInstall = document.createElement("button");
+    btnInstall.className = "btn small";
+    btnInstall.textContent = "下载并安装";
+    btnInstall.disabled = !zipUrl;
+    actions.appendChild(btnInstall);
+
+    if (!zipUrl) {
+      const hint = document.createElement("span");
+      hint.className = "muted small";
+      hint.textContent = "暂无可用下载";
+      actions.appendChild(hint);
+    }
+
+    card.appendChild(actions);
+
+    const progressWrap = document.createElement("div");
+    progressWrap.className = "market-progress";
+    const progress = document.createElement("div");
+    progress.className = "progress";
+    const bar = document.createElement("div");
+    bar.className = "progress-bar";
+    progress.appendChild(bar);
+    progressWrap.appendChild(progress);
+    const statusEl = document.createElement("div");
+    statusEl.className = "market-status";
+    progressWrap.appendChild(statusEl);
+    card.appendChild(progressWrap);
+
+    function setProgress(pct, text) {
+      const val = Math.max(0, Math.min(100, Number(pct || 0)));
+      bar.style.width = `${val.toFixed(1)}%`;
+      statusEl.textContent = text || "";
+    }
+
+    btnInstall.addEventListener("click", async () => {
+      if (!zipUrl) return;
+      const fileName = pack.id ? `${pack.id}.zip` : "pack.zip";
+      btnInstall.disabled = true;
+      btnInstall.textContent = "下载中...";
+      progressWrap.classList.add("active");
+      setProgress(0, "准备下载...");
+      try {
+        const blob = await downloadWithProgress(zipUrl, (loaded, total) => {
+          if (total > 0) {
+            const pct = (loaded / total) * 100;
+            setProgress(pct, `下载中 ${pct.toFixed(1)}% · ${formatBytes(loaded)}/${formatBytes(total)}`);
+          } else {
+            setProgress(0, `下载中 ${formatBytes(loaded)}`);
+          }
+        });
+        setProgress(100, "下载完成，安装中...");
+        const data = await importZipWithMerge(blob, fileName);
+        const skipped = Array.isArray(data.skipped) ? data.skipped.length : 0;
+        setProgress(100, `导入完成：${data.imported || 0} 张，跳过 ${skipped} 张`);
+        btnInstall.textContent = "重新安装";
+      } catch (e) {
+        const msg = (e && e.message) ? e.message : "安装失败";
+        setProgress(0, `安装失败：${msg}`);
+        btnInstall.textContent = "重试安装";
+      } finally {
+        btnInstall.disabled = false;
+      }
+    });
+
+    return card;
+  }
+
+  async function loadMarket() {
+    setNotice("加载中...", true);
+    setMeta("");
+    marketList.innerHTML = "";
+    try {
+      const res = await fetch(marketUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const data = await res.json();
+      const packs = Array.isArray(data.packs) ? data.packs : [];
+      const metaParts = [];
+      if (data.name) metaParts.push(String(data.name));
+      if (data.description) metaParts.push(String(data.description));
+      setMeta(metaParts.join(" · "));
+      if (!packs.length) {
+        setNotice("暂无可用包", true);
+        return;
+      }
+      packs.forEach((pack) => {
+        marketList.appendChild(renderPack(pack || {}));
+      });
+      setNotice(`共 ${packs.length} 个包`, true);
+    } catch (e) {
+      setNotice("无法连接到github", false);
+    }
+  }
+
+  if (btnRefresh) btnRefresh.addEventListener("click", loadMarket);
+  loadMarket();
+}
+
 // =============== PROGRESS PAGE ===============
 function onProgressPage() {
   const downloadWrap = qs("#downloadWrap");
@@ -1016,5 +1287,6 @@ window.addEventListener("DOMContentLoaded", () => {
   if (window.__PAGE__ === "lab") onLabPage();
   if (window.__PAGE__ === "benchmark") onBenchmarkPage();
   if (window.__PAGE__ === "init") onBenchmarkPage();
+  if (window.__PAGE__ === "market") onMarketPage();
   if (window.__PAGE__ === "progress") onProgressPage();
 });

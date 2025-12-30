@@ -77,7 +77,10 @@ source .venv/bin/activate
 安装依赖：
 
 ```bash
-pip install -r requirements.runtime.txt
+# 如果你有 Nvidia 的 GPU 并且可以使用 CUDA 请使用
+pip install -r requirements/runtime-gpu-cu121.txt
+# 如果你只有 CPU 请使用
+pip install -r requirements/runtime-cpu.txt
 ```
 
 ## 2. 启动服务

